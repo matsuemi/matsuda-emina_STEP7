@@ -94,9 +94,9 @@ GROUP BY products.id, products.product_name;
 SELECT
 users.name
 FROM `users`
-LEFT JOIN `order_items`
-ON users.id = order_items.order_id
-WHERE order_items.order_id IS NULL;
+LEFT JOIN `orders`
+ON users.id = orders.user_id
+WHERE orders.id IS NULL;
 
 設問12
 SELECT
@@ -112,10 +112,11 @@ FROM `users`
 INNER JOIN `orders`
 ON users.id = orders.user_id
 INNER JOIN `order_items`
-ON orders.user_id = order_items.order_id
+ON orders.id = order_items.order_id
 INNER JOIN `products`
 ON order_items.product_id = products.id
-WHERE products.product_name= 'テレビ' ;
+WHERE products.product_name = 'テレビ';
+
 
 設問14
 SELECT
@@ -126,7 +127,7 @@ order_items.quantity AS `数量`,
 order_items.quantity * products.price AS `合計金額`
 FROM `order_items`
 INNER JOIN `orders`
-ON order_items.order_id = orders.user_id
+ON order_items.order_id = orders.id
 INNER JOIN `users`
 ON orders.user_id = users.id
 INNER JOIN `products`
@@ -164,21 +165,22 @@ CREATE INDEX idx_product ON order_items(product_id);
 設問19
 SELECT
 users.name,
-AVG(order_total) AS `平均金額`
-FROM(
-SELECT
-orders.user_id,
-SUM(order_items.quantity * products.price) AS `order_total`
-FROM `orders`
-INNER JOIN `order_items`
-ON orders.user_id  = order_items.order_id
-INNER JOIN `products`
-ON order_items.product_id = products.id
-GROUP BY orders.user_id
-)t
+AVG(t.order_total) AS `平均金額`
+FROM (
+  SELECT
+    orders.id,
+    orders.user_id,
+    SUM(order_items.quantity * products.price) AS `order_total`
+  FROM `orders`
+  INNER JOIN `order_items`
+    ON orders.id = order_items.order_id
+  INNER JOIN `products`
+    ON order_items.product_id = products.id
+  GROUP BY orders.id, orders.user_id
+) t
 INNER JOIN `users`
-ON users.id = t.user_id
-GROUP BY users.id,users.name;
+  ON users.id = t.user_id
+GROUP BY users.id, users.name;
 
 設問20
 SELECT
@@ -258,7 +260,7 @@ SELECT id FROM(
 SELECT p.id
 FROM products p
 LEFT JOIN order_items oi
-ON p.id = oi.oroduct_id
+ON p.id = oi.product_id
 WHERE oi.product_id IS NULL
 )t
 );
